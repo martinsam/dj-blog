@@ -1,0 +1,43 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Blog | Recherche sur [{{ search_term }}] | {% endblock %}
+
+{% block content %}
+
+    <div class="full-content">
+
+        <div class="col-25 small">
+            {% include 'blog/includes/nav.html' %}
+            {% include 'blog/includes/search_form.html' %}
+        </div>
+
+        <div class="col-50">
+            {% if results and search_term %}
+                <h2><span>{{ results|length }} résultat{{ results|length|pluralize }}</span> pour votre recherche :</h2>
+                <hr />
+                {% for p in results %}
+                <h3><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></h3>
+                <p class="small">
+                    <em>
+                     Le {{ p.date_created|date:"d.m.Y" }} à {{ p.date_created|date:"H:m" }}
+                    {% if p.num_comment %}
+                     - {{ p.num_comment }} commentaire{{ p.num_comment|pluralize }}
+                    {% endif %}
+                    </em>
+                </p>
+                <hr />
+                {% endfor %}
+            {% else %}
+                <h2>Pas de résultat</h2>
+                <p>Aucun billet ne correspond à votre recherche.</p>
+            {% endif %}
+        </div>
+
+        <div class="col-25 small lastcol">
+            {% include 'blog/includes/about.html' %}
+        </div>
+
+        <br class="clear" />
+    </div><!-- END .full-content -->
+
+{% endblock %}

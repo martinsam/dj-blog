@@ -1,0 +1,5 @@
+{% load i18n %}
+<form id="blog-search-form" action="{% url blog_search %}" method="get">
+    <input type="text" size="20" maxlength="255" id="q" name="q" value="{{ search_term }}" alt="{{ MEDIA_URL }}json/blog_suggest.js">
+    <input class="submit" type="submit" value="{% trans "ok" %}" id="q-s" />
+</form> 

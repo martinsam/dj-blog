@@ -1,0 +1,136 @@
+{% extends "layout/base.html" %}
+{% load i18n %}
+{% block title %}{{ p.title }}{% endblock %}
+{% block extra_head %}<meta name="description" content="{{ p.title }}" />
+{% include 'blog/includes/extra_head.html' %}{% endblock %}
+
+{% block content %}
+
+<div>
+    {% include 'blog/includes/search_form.html' %}
+    <div class="next-prev">
+        {% if prev %}<a class="nav-link prev" href="{{ prev.get_absolute_url }}">{% trans "Billet précedent" %}</a>{% endif %}
+        {% if next %}<a class="nav-link next" href="{{ next.get_absolute_url }}">{% trans "Billet suivant" %}</a>{% endif %}
+    </div>
+    <div class="blog-nav">
+        <a class="nav-link blog" href="{% url blog %}">{% trans "Blog" %}</a>
+        <a class="nav-link archives" href="{% url blog_archives %}">{% trans "Archives" %}</a>
+    </div>
+</div>
+
+<div>
+
+    <div id="post-metadata">
+        <span class="post-metadata-author">Par {{ p.get_author_display }}</span>
+        <span class="post-metadata-date">{{ p.date_created|date:"d.m.Y H:m" }}</span>
+        {% if p.num_comment %}<span class="post-metadata-comments-num"><a href="#comments">{{ p.num_comment }} {% trans "commentaire" %}{{ p.num_comment|pluralize }}</a></span>{% endif %}
+        <span class="post-metadata-permalink"><a href="{{ p.get_absolute_url }}">{% trans "Permalien" %}</a></span>
+    </div>
+
+    {% if p.is_old %}<p class="warning">{% trans "Vieux. Ce billet a plus d'un an. S'il contient des informations techniques elles sont peut être obsolètes." %}</p>{% endif %}
+
+    <div id="post">
+        <h1>{{ p.title }}</h1>
+        {{ p.content|safe }}
+    </div>
+
+    {% if not p.comments_are_closed or comments %}<h2 id="comments">{% trans "Commentaires" %}</h2>{% endif %}
+
+    {% if not p.comments_are_closed %}
+
+    <form id="comment-form" action="" method="post" accept-charset="utf-8">
+        {% csrf_token %}
+        <div id="comment-form-intro">
+            <p id="add-comment">{% trans "Ajouter un commentaire" %}</p>
+            {% with p.get_comments_time_before_closing as ctbc %}<p id="time-remaining" title="{{ p.get_comments_closing_date|date:"Y,n,j,G,i,s" }}">
+                {% trans "Encore" %} 
+                {% if ctbc.days %}<span id="time-remaining-days">{{ ctbc.days }} {% trans "jour" %}{{ ctbc.days|pluralize }}</span>{% endif %} 
+                {% if ctbc.hours %}<span id="time-remaining-hours">{{ ctbc.hours }} {% trans "heure" %}{{ ctbc.hours|pluralize }}</span>{% endif %} 
+                {% if ctbc.minutes %}<span id="time-remaining-mins">{{ ctbc.minutes }} {% trans "minute" %}{{ ctbc.minutes|pluralize }}</span>{% endif %} 
+                {% if ctbc.seconds %}et <span id="time-remaining-secs">{{ ctbc.seconds }} {% trans "seconde" %}{{ ctbc.seconds|pluralize }}</span>{% endif %} 
+                {% trans "avant la fermeture des commentaires pour ce billet." %}</p>{% endwith %}
+        </div>
+
+        {% if form.errors %}
+        <div class="error-message">
+            <p>{% trans "Erreur(s)" %}</p>
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                    <li>{{ field.label }} : {{ error|lower }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="field-holder{% if form.comment.errors %} error{% endif %}">
+            <label for="id_comment">{% trans "Votre commentaire (obligatoire)" %}</label>
+            {{ form.comment }}
+            <div class="help">
+                <ul>
+                    <li>{% trans "Tags HTML autorisés : " %}{% for tag in allowed_tags %}<strong>{{ tag }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}</li>
+                    <li>{% trans "Le reste du code HTML est affiché comme du texte et les adresses web sont automatiquement transformées le cas échéant" %}</li>
+                    <li>{% trans "1 retour chariot correspond à la création automatique d'un <strong>&lt;br /&gt;</strong>, 2 retours chariots correspondent à la création automatique d'un nouveau paragraphe via la balise <strong>&lt;p&gt;</strong>" %}</li>
+                </ul>
+            </div>
+        </div>
+        <div id="c-name" class="field-holder{% if form.author.errors %} error{% endif %}">
+            <label for="id_author">{% trans "Votre nom (obligatoire)" %}</label>
+            {{ form.author }}
+        </div>
+        <div id="c-email" class="field-holder{% if form.email.errors %} error{% endif %}">
+            <label for="id_email">{% trans "Votre e-mail" %}</label>
+            {{ form.email }}
+        </div>
+        <div id="c-website" class="field-holder{% if form.site.errors %} error{% endif %}">
+            <label for="id_site">{% trans "Votre site web" %}</label>
+            {{ form.site }}
+        </div>
+        <div class="none">{# bot killa :) #}
+            <label for="id_email_confirm">{% trans "Confirmez votre e-mail" %}</label>
+            <input type="text" name="email_confirm" value="" id="id_email_confirm" />
+        </div>
+        <div id="c-submit" class="form-control">
+            <input type="submit" name="preview" value="{% trans "Prévisualiser" %}" />
+        </div>
+
+        {% if preview %}
+        <br class="clear">
+        <div class="comment-item comment-preview" id="comment-preview">
+            <div class="comment-metadata">
+                <h3>{% trans "Preview" %}</h3>
+                <span class="comment-metadata-author">{% if preview.site %}<a href="{{ preview.site }}" rel="nofollow">{{ preview.author }}</a>{% else %}{{ preview.author }}{% endif %}</span>
+            </div>
+            <div class="comment">
+                {{ preview.comment|safe }}
+            </div>
+        </div>
+        <div class="form-control">
+            <input type="submit" name="submit" value="Envoyer" />
+        </div>
+        {% endif %}
+
+    </form>
+    {% endif %}
+
+    {% if comments %}
+    {% for c in comments %}
+    <div class="comment-item">
+        <div class="comment-metadata">
+            <span class="comment-metadata-link"><a href="#c{{ c.pk }}" id="c{{ c.pk }}">#{{ forloop.counter }}</a></span>
+            <span class="comment-metadata-author">{% if c.site %}<a href="{{ c.site }}" rel="nofollow">{{ c.author }}</a>{% else %}{{ c.author }}{% endif %}</span>
+            <span class="comment-metadata-date">{{ c.date_created|date:"d.m.y H:m" }}</span>
+        </div>
+        <div class="comment">
+            {{ c.comment|safe }}
+        </div>
+    </div><!-- END .comment-item -->
+    {% endfor %}
+    {% endif %}
+
+    {% ifequal pub '1' %}<div class="success-message"><p>{% trans "Votre commentaire a bien été enregistré \o/" %}</p></div>{% endifequal %}
+
+</div>
+
+{% endblock %}

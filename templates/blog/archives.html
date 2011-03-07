@@ -1,0 +1,31 @@
+{% extends "layout/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Archives" %}{% endblock %}
+{% block extra_head %}{% include 'blog/includes/extra_head.html' %}{% endblock %}
+
+{% block content %}
+
+<div class="b b40">
+    {% include 'blog/includes/search_form.html' %}
+    <div class="blog-nav">
+        <a class="nav-link blog" href="{% url blog %}">{% trans "Blog" %}</a>
+    </div>
+    {% include 'blog/includes/selected.html' %}
+</div>
+
+<div>
+    <h1>{% trans "Archives" %}</h1>
+    <div id="archives">
+        {% regroup archives by date_created.month as entries_by_month %}
+        {% for entries in entries_by_month %}
+        <h2>{{ entries.list.0.date_created|date:"F Y"|capfirst }}</h2>
+        <ul>
+            {% for entry in entries.list %}
+            <li><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></li>
+            {% endfor %}
+        </ul>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

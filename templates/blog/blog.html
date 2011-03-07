@@ -1,0 +1,30 @@
+{% extends "layout/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Blog" %}{% endblock %}
+{% block extra_head %}{% include 'blog/includes/extra_head.html' %}{% endblock %}
+
+{% block content %}
+
+<div>
+    {% include 'blog/includes/search_form.html' %}
+    <div class="blog-nav">
+        <a class="nav-link archives" href="{% url blog_archives %}">{% trans "Archives" %}</a>
+    </div>
+    {% include 'blog/includes/selected.html' %}
+</div>
+
+<div>
+    <h1>{% trans "Derniers posts" %} <a class="all" title="{% trans "Voir tout" %}" href="{% url blog_archives %}">{% trans "Voir tout" %}</a></h1>
+    <ul class="posts-list">
+        {% for p in latest_posts %}
+        <li>
+            <span>
+                <a href="{{ p.get_absolute_url }}">{{ p.title }}</a>
+                <span>{{ p.date_created|date:"d.m.Y H:m" }}{% if p.num_comment %} | {{ p.num_comment }} commentaire{{ p.num_comment|pluralize }}{% endif %}</span>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}
